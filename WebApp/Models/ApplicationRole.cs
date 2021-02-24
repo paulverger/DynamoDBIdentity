@@ -2,15 +2,22 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Amazon.DynamoDBv2.DataModel;
+
 
 namespace WebApp.Models
 {
+    [DynamoDBTable("AppplicationRole")]
     public class ApplicationRole
     {
-        public int Id { get; set; }
+        [DynamoDBHashKey]
+        [DynamoDBProperty("RoleId")]
+        public int RoleId { get; set; }
 
-        public string Name { get; set; }
+        [DynamoDBProperty("RoleName")]
+        public string RoleName { get; set; }
 
-        public string NormalizedName { get; set; }
+        [DynamoDBProperty("NormalizedRoleName")]
+        public string NormalizedRoleName { get; set; }
     }
 }

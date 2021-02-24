@@ -9,8 +9,8 @@ namespace WebApp.Models
     [DynamoDBTable("ApplicationUser")]
     public class ApplicationUser
     {
-        //[DynamoDBProperty("Id")]
-        //public int Id { get; set; }
+        [DynamoDBProperty("Id")]
+        public int Id { get; set; }
         [DynamoDBProperty("UserName")]
         public string UserName { get; set; }
 
