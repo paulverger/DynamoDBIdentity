@@ -21,7 +21,7 @@ namespace WebApp.Data
     public class UserStore : IUserStore<ApplicationUser>, IUserEmailStore<ApplicationUser>, IUserPhoneNumberStore<ApplicationUser>,
         IUserTwoFactorStore<ApplicationUser>, IUserPasswordStore<ApplicationUser>, IUserRoleStore<ApplicationUser>
     {
-        private readonly string _connectionString;
+        // private readonly string _connectionString;
         private IAmazonDynamoDB _client;
         private RoleStore _roleStore;
         private DataHelper _helper;
@@ -99,25 +99,9 @@ namespace WebApp.Data
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-			var tableName = "ApplicationUser";
-			var userIdDict = new Dictionary<string, Condition>();
-            var attValue = new AttributeValue() { N = userId };
-            userIdDict.Add("Id", new Condition() {AttributeValueList = new List<AttributeValue> { attValue} });
+            ApplicationUser user = await _helper.GetApplicationUserItemByNonKeyAsync("Id", userId);
 
-            var result = _client.ScanAsync(tableName, userIdDict).Result;
-
-			if (result.Items.Count == 0)
-			{
-				return null;
-			}
-
-			List<ApplicationUser> retrievedUsers = new List<ApplicationUser>();
-            var doc = Document.FromAttributeMap(result.Items);
-			DynamoDBContext context = new DynamoDBContext(_client);
-			var typedDoc = context.FromDocument<ApplicationUser>(doc);
-			retrievedUsers.Add(typedDoc);
-
-			return retrievedUsers.FirstOrDefault<ApplicationUser>();
+            return user;
 
 			//using (var connection = new SqlConnection(_connectionString))
 			//{
@@ -131,41 +115,9 @@ namespace WebApp.Data
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var tableName = "ApplicationUser";
-            var dict = new Dictionary<string, AttributeValue>();
-            dict.Add("NormalizedUserName", new AttributeValue(normalizedUserName.ToLower()));
-            var result = await _client.GetItemAsync(tableName, dict );
+            ApplicationUser user = await _helper.GetApplicationUserItemByKeyAsync(normalizedUserName);
 
-            if (result.Item.Count == 0)
-            {
-                return null;
-            }
-
-            List<ApplicationUser> retrievedUsers = new List<ApplicationUser>();
-
-            var doc = Document.FromAttributeMap(result.Item);
-            DynamoDBContext context = new DynamoDBContext(_client);
-            var typedDoc = context.FromDocument<ApplicationUser>(doc);
-            retrievedUsers.Add(typedDoc);
-
-            return retrievedUsers.FirstOrDefault<ApplicationUser>();
-
-            //         Dictionary<string, Condition> conditions = new Dictionary<string, Condition>();
-            //         Condition condition = new Condition();
-            //         condition.ComparisonOperator = ComparisonOperator.EQ;
-            //         condition.AttributeValueList.Add(new AttributeValue { S = normalizedUserName.ToLower() });
-            //         conditions["NormalizedUserName"] = condition;
-
-            //         ScanRequest request = new ScanRequest
-            //         {
-            //             TableName = "ApplicationUser",
-            //             ScanFilter = conditions
-            //         };
-
-
-            //         ScanResponse result = await _client.ScanAsync(request);
-
-
+            return user;
 		}
 
         public Task<string> GetNormalizedUserNameAsync(ApplicationUser user, CancellationToken cancellationToken)
@@ -267,25 +219,9 @@ namespace WebApp.Data
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var tableName = "ApplicationUser";
-            var dict = new Dictionary<string, AttributeValue>();
-            dict.Add("NormalizedEmail", new AttributeValue(normalizedEmail.ToUpper()));
-            var result = await _client.GetItemAsync(tableName, dict);
+            ApplicationUser user = await _helper.GetApplicationUserItemByNonKeyAsync("NormalizedEmail", normalizedEmail);
 
-            if (result.Item.Count == 0)
-            {
-                return null;
-            }
-
-            List<ApplicationUser> retrievedUsers = new List<ApplicationUser>();
-
-            var doc = Document.FromAttributeMap(result.Item);
-            DynamoDBContext context = new DynamoDBContext(_client);
-            var typedDoc = context.FromDocument<ApplicationUser>(doc);
-            retrievedUsers.Add(typedDoc);
-
-            return retrievedUsers.FirstOrDefault<ApplicationUser>();
-
+            return user;
 
             //using (var connection = new SqlConnection(_connectionString))
             //{
@@ -360,20 +296,21 @@ namespace WebApp.Data
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            //var normalizedUserName = user.NormalizedUserName.ToUpper();
+            var normalizedUserName = user.NormalizedUserName.ToUpper();
             var normalizedRole = roleName.ToUpper();
             //ApplicationRole role = await _roleStore.FindByNameAsync(normalizedRole, cancellationToken);
             bool alreadyHasRole = await IsInRoleAsync(user, normalizedRole, cancellationToken);
             if(!alreadyHasRole)
 			{
+                ApplicationRole role = await _roleStore.FindByNameAsync(normalizedRole, cancellationToken);
+                int roleId = role.RoleId;
                 DynamoDBContext context = new DynamoDBContext(_client);
                 UserToRoles userRole = new UserToRoles();
                 userRole.RoleId = role.RoleId;
                 userRole.NormalizedUserName = normalizedUserName;
                 var userDoc = context.ToDocument<UserToRoles>(userRole);
-                Table table = Table.LoadTable(_client, "ApplicationUserRole");
+                Table table = Table.LoadTable(_client, "UserToRoles");
                 await table.PutItemAsync(userDoc);
-
             }
 
             //return IdentityResult.Success;
@@ -400,7 +337,7 @@ namespace WebApp.Data
             var normalizedRole = roleName.ToUpper();
             ApplicationRole role = await _roleStore.FindByNameAsync(normalizedRole, cancellationToken);
             int roleId = role.RoleId;
-            var tableName = "ApplicationUserRole";
+            var tableName = "UserToRoles";
             Dictionary<string, AttributeValue> deleteDict = new Dictionary<string, AttributeValue>();
             deleteDict.Add("NormalizedUserName", new AttributeValue(user.NormalizedUserName));
             deleteDict.Add("RoleId", new AttributeValue(roleId.ToString()));
@@ -421,47 +358,18 @@ namespace WebApp.Data
 
             string normalizedUserName = user.NormalizedUserName.ToUpper();
 
-            var tableName = "ApplicationUserRole";
-            var retrieveConditionDict = new Dictionary<string, AttributeValue>();
-            retrieveConditionDict.Add("NormalizedUserName", new AttributeValue(normalizedUserName));
-            var result = await _client.GetItemAsync(tableName, retrieveConditionDict);
-
-            if(result.Item.Count == 0)
-			{
-                return null;
-			}
-
-            List<UserToRoles> retrievedUserRoles = new List<UserToRoles>();
-            var doc = Document.FromAttributeMap(result.Item);
-            DynamoDBContext context = new DynamoDBContext(_client);
-            var typedDoc = context.FromDocument<UserToRoles>(doc);
-            retrievedUserRoles.Add(typedDoc);
-
-
+            List<UserToRoles> userRoles = await _helper.GetUserToRolesItemListByNonKeyAsync("NormalizedUserName", normalizedUserName);
             List<int> roleIds = new List<int>();
-            foreach(UserToRoles userRole in retrievedUserRoles)
+            foreach(UserToRoles userRole in userRoles)
 			{
                 roleIds.Add(userRole.RoleId);
 			}
-
             List<string> roleNames = new List<string>();
-            tableName = "ApplicationRole";
-            foreach (int roleId in roleIds)
+            foreach(int roleId in roleIds)
 			{
-                retrieveConditionDict.Clear();
-                var val = new AttributeValue() { N = roleId.ToString()};
-                retrieveConditionDict.Add("RoleId", val);
-                result = await _client.GetItemAsync(tableName, retrieveConditionDict);
-
-                List<ApplicationRole> retrievedRoles = new List<ApplicationRole>();
-                doc = Document.FromAttributeMap(result.Item);
-                context = new DynamoDBContext(_client);
-                var roleTypedDoc = context.FromDocument<ApplicationRole>(doc);
-                retrievedRoles.Add(roleTypedDoc);
-
-                ApplicationRole role = retrievedRoles.FirstOrDefault<ApplicationRole>();
+                ApplicationRole role = await _helper.GetApplicationRoleItemByKeyAsync(roleId);
                 roleNames.Add(role.NormalizedRoleName);
-            }
+			}
 
             return roleNames;
 
@@ -482,25 +390,10 @@ namespace WebApp.Data
             string normalizedUserName = user.NormalizedUserName.ToUpper();
             string normalizedRole = roleName.ToUpper();
 
-            ApplicationUser appuser = await FindByNameAsync(normalizedUserName, cancellationToken);
-            Dictionary<string, int> rolesToRoleIds = await _helper.GetRoleToRoleIdDictionary();
-            int roleId = rolesToRoleIds[normalizedRole];
-
-            var tableName = "ApplicationUserRole";
-            var retrieveConditionDict = new Dictionary<string, AttributeValue>();
-            retrieveConditionDict.Add("NormalizedUserName", new AttributeValue(normalizedUserName));
-            retrieveConditionDict.Add("RoleId", new AttributeValue(roleId.ToString()));
-            var result = await _client.GetItemAsync(tableName, retrieveConditionDict);
-
-            if (result.Item.Count > 0)
-            {
-                return true;
-            }
-            else
-			{
-                return false;
-			}
-
+            ApplicationRole role = await _roleStore.FindByNameAsync(normalizedRole, cancellationToken);
+            int roleId = role.RoleId;
+            bool userHasRole = await _helper.UserHasRoleAsync(normalizedUserName, roleId);
+            return userHasRole;
 
 
             //using (var connection = new SqlConnection(_connectionString))
@@ -519,74 +412,18 @@ namespace WebApp.Data
             cancellationToken.ThrowIfCancellationRequested();
 
 			string normalizedRole = roleName.ToUpper();
-            //Dictionary<string, int> RoleToRoleIdDict = await _helper.GetRoleToRoleIdDictionary();
-            //int roleId = RoleToRoleIdDict[normalizedRole];
-            //var tableName = "ApplicationUserRole";
-			//var dict = new Dictionary<string, AttributeValue>();
-			//dict.Add("RoleID", new AttributeValue(roleId.ToString()));
-			//var result = await _client.GetItemAsync(tableName, dict);
-            var tableName = "ApplicationRole";
-            var dict = new Dictionary<string, AttributeValue>();
-            dict.Add("NormalizedName", new AttributeValue(normalizedRole));
-            var result = await _client.GetItemAsync(tableName, dict);
-
-            if (result.Item.Count == 0)
-			{
-				return null;
-			}
-
-			List<ApplicationRole> roles = new List<ApplicationRole>();
-
-			var doc = Document.FromAttributeMap(result.Item);
-			DynamoDBContext context = new DynamoDBContext(_client);
-			var typedDoc = context.FromDocument<ApplicationRole>(doc);
-            roles.Add(typedDoc);
-
-            int roleId = roles.FirstOrDefault<ApplicationRole>().RoleId;
-
-            tableName = "ApplicationUserRole";
-            dict = new Dictionary<string, AttributeValue>();
-            dict.Add("RoleId", new AttributeValue(roleId.ToString()));
-            result = await _client.GetItemAsync(tableName, dict);
-
-            List<UserToRoles> userRoles = new List<UserToRoles>();
-
-            doc = Document.FromAttributeMap(result.Item);
-            context = new DynamoDBContext(_client);
-            var appUserRoleTypedDoc = context.FromDocument<UserToRoles>(doc);
-            userRoles.Add(appUserRoleTypedDoc);
-
-            List<string> appUserNames = new List<string>();
+            ApplicationRole role = await _roleStore.FindByNameAsync(normalizedRole, cancellationToken);
+            int roleId = role.RoleId;
+            List<UserToRoles> userRoles = await _helper.GetUserToRolesItemListByNonKeyAsync("RoleId", roleId);
+            List<ApplicationUser> users = new List<ApplicationUser>();
             foreach(UserToRoles userRole in userRoles)
 			{
-                appUserNames.Add(userRole.NormalizedUserName);
-			}
-
-            tableName = "ApplicationUser";
-            List<ApplicationUser> users = new List<ApplicationUser>();
-            foreach (string normalizedUserName in appUserNames)
-			{
-                dict = new Dictionary<string, AttributeValue>();
-                dict.Add("NormalizedUserName", new AttributeValue(normalizedUserName));
-                result = await _client.GetItemAsync(tableName, dict);
-
-                doc = Document.FromAttributeMap(result.Item);
-                context = new DynamoDBContext(_client);
-                var userTypedDoc = context.FromDocument<ApplicationUser>(doc);
-                users.Add(userTypedDoc);
+                string userName = userRole.NormalizedUserName;
+                ApplicationUser user = await _helper.GetApplicationUserItemByKeyAsync(userName);
+                users.Add(user);
 			}
 
             return users;
-
-   //         Dictionary<string, ApplicationUser> userDict = await _helper.GetUserDictionary();
-   //         List<ApplicationUser> appUsers = new List<ApplicationUser>();
-   //         foreach(string userName in appUserNames)
-			//{
-   //             appUsers.Add(userDict[userName]);
-			//}
-
-   //         return appUsers;
-
 
 			//using (var connection = new SqlConnection(_connectionString))
 			//{

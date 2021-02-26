@@ -34,8 +34,7 @@ namespace WebApp.Data
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            int maxRoleId = await _helper.GetMaxRoleIdAsync();
-            role.RoleId = maxRoleId + 1;
+            int maxRoleId = await _helper.GetNewRoleIdAsync();
             DynamoDBContext context = new DynamoDBContext(_client);
             var roleDoc = context.ToDocument<ApplicationRole>(role);
             Table table = Table.LoadTable(_client, "ApplicationRole");
@@ -132,24 +131,9 @@ namespace WebApp.Data
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var tableName = "ApplicationRole";
-            var roleIdDict = new Dictionary<string, AttributeValue>();
+            ApplicationRole role = await _helper.GetApplicationRoleItemByKeyAsync(roleId);
 
-            roleIdDict.Add("Id", new AttributeValue(roleId.ToString()));
-            var result = await _client.GetItemAsync(tableName, roleIdDict);
-
-            if (result.Item.Count == 0)
-            {
-                return null;
-            }
-
-            List<ApplicationRole> retrievedRoles = new List<ApplicationRole>();
-            var doc = Document.FromAttributeMap(result.Item);
-            DynamoDBContext context = new DynamoDBContext(_client);
-            var typedDoc = context.FromDocument<ApplicationRole>(doc);
-            retrievedRoles.Add(typedDoc);
-
-            return retrievedRoles.FirstOrDefault<ApplicationRole>();
+            return role;
 
             //using (var connection = new SqlConnection(_connectionString))
             //{
@@ -159,28 +143,22 @@ namespace WebApp.Data
             //}
         }
 
+        public async Task<ApplicationRole> FindByIdAsync(string normalizedRoleName, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            ApplicationRole role = await FindByNameAsync(normalizedRoleName, cancellationToken);
+
+            return role;
+        }
+
         public async Task<ApplicationRole> FindByNameAsync(string normalizedRoleName, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var tableName = "ApplicationRole";
-            var dict = new Dictionary<string, AttributeValue>();
-            dict.Add("NormalizedName", new AttributeValue(normalizedRoleName));
-            var result = await _client.GetItemAsync(tableName, dict);
+            ApplicationRole role = await _helper.GetApplicationRoleItemByNonKeyAsync("NormalizedRoleName", normalizedRoleName);
 
-            if (result.Item.Count == 0)
-            {
-                return null;
-            }
-
-            List<ApplicationRole> retrievedRoles = new List<ApplicationRole>();
-
-            var doc = Document.FromAttributeMap(result.Item);
-            DynamoDBContext context = new DynamoDBContext(_client);
-            var typedDoc = context.FromDocument<ApplicationRole>(doc);
-            retrievedRoles.Add(typedDoc);
-
-            return retrievedRoles.FirstOrDefault<ApplicationRole>();
+            return role;
 
 
             //using (var connection = new SqlConnection(_connectionString))
