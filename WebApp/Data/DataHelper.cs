@@ -104,22 +104,6 @@ namespace WebApp.Data
 
          }
 
-            public async Task<int> GetMaxRoleIdAsync()
-             {
-            List<ApplicationRole> retrievedRoles = await ReadRoleTable();
-
-            int maxId = 0;
-            foreach (ApplicationRole role in retrievedRoles)
-            {
-                if (role.RoleId > maxId)
-                {
-                    maxId = role.RoleId;
-                }
-            }
-
-            return maxId;
-        }
-
         public async Task<bool> UserHasRoleAsync(string normalizedUserName, int roleId)
         {
             AttributeValue hashKey = new AttributeValue { S = normalizedUserName };
@@ -314,11 +298,11 @@ namespace WebApp.Data
                 startKey = result.LastEvaluatedKey;
             } while (startKey != null && startKey.Count > 0);
 
-            try
+            if(users.Count > 0)
 			{
                 return users[0];
-            }
-            catch
+			}
+            else
 			{
                 return null;
 			}
@@ -396,7 +380,14 @@ namespace WebApp.Data
                 users.Add(user);
 
             }
-            return users[0];
+            if(users.Count > 0)
+			{
+                return users[0];
+            }
+            else
+			{
+                return null;
+			}
         }
 
         public async Task<ApplicationRole> GetApplicationRoleItemByKeyAsync(int roleId)
@@ -446,7 +437,14 @@ namespace WebApp.Data
                 startKey = result.LastEvaluatedKey;
             } while (startKey != null && startKey.Count > 0);
 
-            return roles[0];
+            if(roles.Count > 0)
+			{
+                return roles[0];
+            }
+            else
+			{
+                return null;
+			}
         }
 
         public async Task<ApplicationRole> GetApplicationRoleItemByNonKeyAsync(string propertyName, object value)
@@ -497,106 +495,6 @@ namespace WebApp.Data
 
         }
 
-        //public async Task<Dictionary<int, string>> GetRoleDictionary()
-        //{
-        //    List<ApplicationRole> roles = await ReadRoleTable();
-
-        //    Dictionary<int, string> roleDict = new Dictionary<int, string>();
-        //    foreach (ApplicationRole appRole in roles)
-        //    {
-        //        roleDict.Add(appRole.RoleId, appRole.NormalizedRoleName);
-        //    }
-
-        //    return roleDict;
-        //}
-
-        public async Task<Dictionary<string, int>> GetRoleToRoleIdDictionary()
-        {
-            List<ApplicationRole> roles = await ReadRoleTable();
-
-            Dictionary<string, int> roleToRoleIdDict = new Dictionary<string, int>();
-            foreach (ApplicationRole appRole in roles)
-            {
-                roleToRoleIdDict.Add(appRole.NormalizedRoleName, appRole.RoleId);
-            }
-
-            return roleToRoleIdDict;
-        }
-
-   //     public async Task<Dictionary<string, ApplicationUser>> GetUserDictionary()
-   //     {
-   //         Dictionary<string, ApplicationUser> userDict = new Dictionary<string, ApplicationUser>();
-   //         List<ApplicationUser> users = await ReadUserTable();
-   //         foreach(ApplicationUser appuser in users)
-			//{
-   //             userDict.Add(appuser.NormalizedUserName, appuser);
-			//}
-
-   //         return userDict;
-   //     }
-
-
-        //public async Task<ApplicationRole> FindRoleByNameAsync(string normalizedRoleName, System.Threading.CancellationToken cancellationToken)
-        //{
-        //    cancellationToken.ThrowIfCancellationRequested();
-
-        //    var tableName = "ApplicationRole";
-        //    var dict = new Dictionary<string, AttributeValue>();
-        //    dict.Add("NormalizedName", new AttributeValue(normalizedRoleName));
-        //    var result = await _client.GetItemAsync(tableName, dict);
-
-        //    if (result.Item.Count == 0)
-        //    {
-        //        return null;
-        //    }
-
-        //    List<ApplicationRole> retrievedRoles = new List<ApplicationRole>();
-
-        //    var doc = Document.FromAttributeMap(result.Item);
-        //    DynamoDBContext context = new DynamoDBContext(_client);
-        //    var typedDoc = context.FromDocument<ApplicationRole>(doc);
-        //    retrievedRoles.Add(typedDoc);
-
-        //    return retrievedRoles.FirstOrDefault<ApplicationRole>();
-
-        //    //using (var connection = new SqlConnection(_connectionString))
-        //    //{
-        //    //    await connection.OpenAsync(cancellationToken);
-        //    //    return await connection.QuerySingleOrDefaultAsync<ApplicationRole>($@"SELECT * FROM [ApplicationRole]
-        //    //        WHERE [NormalizedName] = @{nameof(normalizedRoleName)}", new { normalizedRoleName });
-        //    //}
-        //}
-
-   //     public async Task<List<ApplicationUser>> ReadUserTable()
-   //     {
-			//var tableName = "ApplicationUser";
-			//var dict = new Dictionary<string, AttributeValue>();
-			//var result = await _client.GetItemAsync(tableName, dict);
-
-			//List<ApplicationUser> users = new List<ApplicationUser>();
-
-			//var doc = Document.FromAttributeMap(result.Item);
-			//DynamoDBContext context = new DynamoDBContext(_client);
-			//var typedDoc = context.FromDocument<ApplicationUser>(doc);
-			//users.Add(typedDoc);
-
-			//return users;
-   //     }
-        public async Task<List<ApplicationRole>> ReadRoleTable()
-        {
-            var tableName = "ApplicationRole";
-            var dict = new Dictionary<string, AttributeValue>();
-            var result = await _client.GetItemAsync(tableName, dict);
-
-            List<ApplicationRole> roles = new List<ApplicationRole>();
-
-            var doc = Document.FromAttributeMap(result.Item);
-            DynamoDBContext context = new DynamoDBContext(_client);
-            var typedDoc = context.FromDocument<ApplicationRole>(doc);
-            roles.Add(typedDoc);
-
-            return roles;
-        }
     }
 
 }
