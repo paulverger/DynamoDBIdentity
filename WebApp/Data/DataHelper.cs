@@ -55,19 +55,6 @@ namespace WebApp.Data
             await table.PutItemAsync(userDoc);
 
             return newMaxId;
-
-            //List<ApplicationUser> retrievedUsers = await ReadUserTable();
-
-            //int maxId = 0;
-            //foreach (ApplicationUser user in retrievedUsers)
-            //{
-            //    if (user.Id > maxId)
-            //    {
-            //        maxId = user.Id;
-            //    }
-            //}
-
-            // return maxId;
         }
 
         public async Task<int> GetNewRoleIdAsync()

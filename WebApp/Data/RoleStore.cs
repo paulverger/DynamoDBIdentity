@@ -17,15 +17,12 @@ namespace WebApp.Data
 {
     public class RoleStore : IRoleStore<ApplicationRole>
     {
-        //private readonly string _connectionString;
         private readonly IAmazonDynamoDB _client;
 
         private readonly DataHelper _helper;
 
-        //public RoleStore(IConfiguration configuration)
         public RoleStore(IAmazonDynamoDB dynamoDBClient)
         {
-            // _connectionString = configuration.GetConnectionString("DefaultConnection");
             _client = dynamoDBClient;
             _helper = new DataHelper(_client);
         }
@@ -39,14 +36,6 @@ namespace WebApp.Data
             var roleDoc = context.ToDocument<ApplicationRole>(role);
             Table table = Table.LoadTable(_client, "ApplicationRole");
             await table.PutItemAsync(roleDoc);
-
-            //using (var connection = new SqlConnection(_connectionString))
-            //{
-            //    await connection.OpenAsync(cancellationToken);
-            //    role.Id = await connection.QuerySingleAsync<int>($@"INSERT INTO [ApplicationRole] ([Name], [NormalizedName])
-            //        VALUES (@{nameof(ApplicationRole.Name)}, @{nameof(ApplicationRole.NormalizedName)});
-            //        SELECT CAST(SCOPE_IDENTITY() as int)", role);
-            //}
 
             return IdentityResult.Success;
         }
@@ -70,15 +59,6 @@ namespace WebApp.Data
             Table table = Table.LoadTable(_client, "ApplicationRole");
             await table.PutItemAsync(roleDoc);
 
-            //using (var connection = new SqlConnection(_connectionString))
-            //{
-            //    await connection.OpenAsync(cancellationToken);
-            //    await connection.ExecuteAsync($@"UPDATE [ApplicationRole] SET
-            //        [Name] = @{nameof(ApplicationRole.Name)},
-            //        [NormalizedName] = @{nameof(ApplicationRole.NormalizedName)}
-            //        WHERE [Id] = @{nameof(ApplicationRole.Id)}", role);
-            //}
-
             return IdentityResult.Success;
         }
 
@@ -90,12 +70,6 @@ namespace WebApp.Data
             Dictionary<string, AttributeValue> deleteDict = new Dictionary<string, AttributeValue>();
             deleteDict.Add("NormalizedName", new AttributeValue(role.NormalizedRoleName.ToLower()));
             await _client.DeleteItemAsync(tableName, deleteDict, cancellationToken);
-
-            //using (var connection = new SqlConnection(_connectionString))
-            //{
-            //    await connection.OpenAsync(cancellationToken);
-            //    await connection.ExecuteAsync($"DELETE FROM [ApplicationRole] WHERE [Id] = @{nameof(ApplicationRole.Id)}", role);
-            //}
 
             return IdentityResult.Success;
         }
@@ -134,13 +108,6 @@ namespace WebApp.Data
             ApplicationRole role = await _helper.GetApplicationRoleItemByKeyAsync(roleId);
 
             return role;
-
-            //using (var connection = new SqlConnection(_connectionString))
-            //{
-            //    await connection.OpenAsync(cancellationToken);
-            //    return await connection.QuerySingleOrDefaultAsync<ApplicationRole>($@"SELECT * FROM [ApplicationRole]
-            //        WHERE [Id] = @{nameof(roleId)}", new { roleId });
-            //}
         }
 
         public async Task<ApplicationRole> FindByIdAsync(string normalizedRoleName, CancellationToken cancellationToken)
@@ -159,14 +126,6 @@ namespace WebApp.Data
             ApplicationRole role = await _helper.GetApplicationRoleItemByNonKeyAsync("NormalizedRoleName", normalizedRoleName);
 
             return role;
-
-
-            //using (var connection = new SqlConnection(_connectionString))
-            //{
-            //    await connection.OpenAsync(cancellationToken);
-            //    return await connection.QuerySingleOrDefaultAsync<ApplicationRole>($@"SELECT * FROM [ApplicationRole]
-            //        WHERE [NormalizedName] = @{nameof(normalizedRoleName)}", new { normalizedRoleName });
-            //}
         }
 
         public void Dispose()
