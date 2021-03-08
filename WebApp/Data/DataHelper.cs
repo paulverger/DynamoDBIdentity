@@ -271,14 +271,9 @@ namespace WebApp.Data
                     user.PhoneNumberConfirmed = phoneNumberConfirmedHolder;
                     user.TwoFactorEnabled = twoFactorEnabledHolder;
                     user.UserName = item["UserName"].S;
-                    user.PhoneNumber = " ";
-                    try
-                    {
+                    if(item.ContainsKey("PhoneNumber"))
+					{
                         user.PhoneNumber = item["PhoneNumber"].S;
-                    }
-                    catch
-                    {
-
                     }
                     users.Add(user);
                 }
