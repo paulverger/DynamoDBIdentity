@@ -1,21 +1,16 @@
-﻿using System;
+﻿using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.DocumentModel;
+using Amazon.DynamoDBv2.Model;
+using Microsoft.AspNetCore.Identity;
 using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Dapper;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
 using WebApp.Models;
-using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DataModel;
-using Amazon.DynamoDBv2.Model;
-using Amazon.DynamoDBv2.DocumentModel;
 
 namespace WebApp.Data
 {
-    public class RoleStore : IRoleStore<ApplicationRole>
+	public class RoleStore : IRoleStore<ApplicationRole>
     {
         private readonly IAmazonDynamoDB _client;
 

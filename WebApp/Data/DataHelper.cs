@@ -1,18 +1,16 @@
-﻿using System;
+﻿using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.DocumentModel;
+using Amazon.DynamoDBv2.Model;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
 using WebApp.Models;
-using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DataModel;
-using Amazon.DynamoDBv2.Model;
-using Amazon.DynamoDBv2.DocumentModel;
 
 namespace WebApp.Data
 {
-    public class DataHelper
+	public class DataHelper
     {
         private IAmazonDynamoDB _client;
 
@@ -442,7 +440,6 @@ namespace WebApp.Data
                 attributeValue = new AttributeValue { N = value.ToString() };
             }
 
-
             Dictionary<string, Condition> conditionDict = new Dictionary<string, Condition>();
             conditionDict.Add(propertyName, new Condition
             {
@@ -471,7 +468,6 @@ namespace WebApp.Data
                 role.NormalizedRoleName = item["NormalizedRoleName"].S;
                 roles.Add(role);
             }
-
 
             return roles[0];
 

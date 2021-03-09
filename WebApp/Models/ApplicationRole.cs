@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Amazon.DynamoDBv2.DataModel;
+﻿using Amazon.DynamoDBv2.DataModel;
 
 
 namespace WebApp.Models
 {
-    [DynamoDBTable("AppplicationRole")]
+	[DynamoDBTable("AppplicationRole")]
     public class ApplicationRole
     {
         [DynamoDBHashKey]

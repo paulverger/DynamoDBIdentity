@@ -43,7 +43,8 @@ namespace WebApp.Data
             Table table = Table.LoadTable(_client, "ApplicationUser");
             await table.PutItemAsync(userDoc);
 
-            ApplicationRole appRole = await (_roleStore.FindByIdAsync(1, cancellationToken));
+            var employeeRoleId = 1;
+            ApplicationRole appRole = await (_roleStore.FindByIdAsync(employeeRoleId, cancellationToken));
             await AddToRoleAsync(user, appRole.NormalizedRoleName, cancellationToken);
 
 
@@ -248,7 +249,7 @@ namespace WebApp.Data
                 Table table = Table.LoadTable(_client, "UserToRoles");
                 await table.PutItemAsync(userDoc);
             }
-
+            return;
             
         }
 

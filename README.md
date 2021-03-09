@@ -1,27 +1,21 @@
-# dapper-identity
+# DynamoDBIdentity
 
 This sample application demonstrates how to use ASP.NET Core Identity with
-your own code instead of Entity Framework to handle data storage.
+Amazon's DynamoDB instead of a relational database to handle data storage,
+at a significant cost saving.
 
-## Dapper
-
-I used [Dapper](https://github.com/StackExchange/Dapper), the super lightweight
-micro-ORM from the brilliant folks at [Stack Exchange](https://stackexchange.com/),
-to access the underlying database.
-
-But you can easily replace that with your own code if you'd rather use ADO.NET or
-any other data access mechanism.
+## DynamoDB is the NoSql database available on AWS.
 
 ## More Information
 
-Take a look at this [blog post](https://markjohnson.io/articles/asp-net-core-identity-without-entity-framework/)
-for more detailed infomation on using ASP.NET Core Identity without Entity Framework.
+Take a look at this [blog post](https://dynamodbdotnet.blogspot.com/2021/03/how-to-implement-aspnet-core-identity)
+for more detailed infomation on using ASP.NET Core Identity with DynamoDB.
 
 ## License
 
 MIT License
 
-Copyright (c) 2017 Mark Johnson
+Copyright (c) 2021 Paul Verger
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
