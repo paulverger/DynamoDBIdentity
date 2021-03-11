@@ -1,10 +1,7 @@
 ﻿using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DataModel;
-using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using WebApp.Models;
 
@@ -16,6 +13,7 @@ namespace WebApp.Data
 
         private const int UserIdIncrement = 5;
         private const int RoleIdIncrement = 1;
+        private const int SubMinimumIdValue = 0;
 
         public DataHelper(IAmazonDynamoDB client)
         {
@@ -24,70 +22,61 @@ namespace WebApp.Data
 
         public async Task<int> GetNewUserIdAsync()
         {
-            var tableName = "MaxId";
-            var userIdDict = new Dictionary<string, AttributeValue>();
-
-            userIdDict.Add("IdType", new AttributeValue("UserId"));
-            var result = await _client.GetItemAsync(tableName, userIdDict);
-
-            if (result.Item.Count == 0)
+            var tableName = "ApplicationUser";
+            AttributeValue attributeValue = new AttributeValue { N = SubMinimumIdValue.ToString() };
+            Dictionary<string, Condition> conditionDict = new Dictionary<string, Condition>();
+            conditionDict.Add("Id", new Condition
             {
-                return 0;
+                ComparisonOperator = "GT",
+                AttributeValueList = new List<AttributeValue> { attributeValue }
+            });
+
+            var result = await _client.ScanAsync(tableName, conditionDict);
+
+
+            List<Dictionary<string, AttributeValue>> items = result.Items;
+            int maxId = 0;
+            foreach (Dictionary<string, AttributeValue> item in items)
+            {
+                int idVal = Convert.ToInt32(item["Id"].N);
+                if (idVal > maxId)
+                {
+                    maxId = idVal;
+                }
             }
 
-            List<MaxId> ids = new List<MaxId>();
-            var doc = Document.FromAttributeMap(result.Item);
-            DynamoDBContext context = new DynamoDBContext(_client);
-            var typedDoc = context.FromDocument<MaxId>(doc);
-            ids.Add(typedDoc);
+            return maxId + UserIdIncrement;
 
-            var maxUserIdEntry = ids.FirstOrDefault<MaxId>();
-            int maxId = maxUserIdEntry.Id;
-            int newMaxId = maxId + UserIdIncrement;
-
-            MaxId updatedMaxIdItem = new MaxId();
-            updatedMaxIdItem.IdType = "UserId";
-            updatedMaxIdItem.Id = newMaxId;
-            var userDoc = context.ToDocument<MaxId>(updatedMaxIdItem);
-            Table table = Table.LoadTable(_client, "MaxId");
-            await table.PutItemAsync(userDoc);
-
-            return newMaxId;
         }
 
         public async Task<int> GetNewRoleIdAsync()
         {
-            var tableName = "MaxId";
-            var roleIdDict = new Dictionary<string, AttributeValue>();
-
-            roleIdDict.Add("IdType", new AttributeValue("RoleIdId"));
-            var result = await _client.GetItemAsync(tableName, roleIdDict);
-
-            if (result.Item.Count == 0)
+            var tableName = "ApplicationRole";
+            AttributeValue attributeValue = new AttributeValue { N = SubMinimumIdValue.ToString() };
+            Dictionary<string, Condition> conditionDict = new Dictionary<string, Condition>();
+            conditionDict.Add("RoleId", new Condition
             {
-                return 0;
+                ComparisonOperator = "GT",
+                AttributeValueList = new List<AttributeValue> { attributeValue }
+            });
+
+            var result = await _client.ScanAsync(tableName, conditionDict);
+
+
+            List<Dictionary<string, AttributeValue>> items = result.Items;
+            int maxRoleId = 0;
+            foreach (Dictionary<string, AttributeValue> item in items)
+            {
+                int roleIdVal = Convert.ToInt32(item["RoleId"].N);
+                if (roleIdVal > maxRoleId)
+                {
+                    maxRoleId = roleIdVal;
+                }
             }
 
-            List<MaxId> ids = new List<MaxId>();
-            var doc = Document.FromAttributeMap(result.Item);
-            DynamoDBContext context = new DynamoDBContext(_client);
-            var typedDoc = context.FromDocument<MaxId>(doc);
-            ids.Add(typedDoc);
+            return maxRoleId + RoleIdIncrement;
 
-            var maxRoleIdEntry = ids.FirstOrDefault<MaxId>();
-            int maxId = maxRoleIdEntry.Id;
-            int newMaxId = maxId + RoleIdIncrement;
-
-            MaxId updatedMaxIdItem = new MaxId();
-            updatedMaxIdItem.IdType = "RoleId";
-            updatedMaxIdItem.Id = newMaxId;
-            var userDoc = context.ToDocument<MaxId>(updatedMaxIdItem);
-            Table table = Table.LoadTable(_client, "MaxId");
-            await table.PutItemAsync(userDoc);
-
-            return newMaxId;
-
-         }
+        }
 
         public async Task<bool> UserHasRoleAsync(string normalizedUserName, int roleId)
         {
