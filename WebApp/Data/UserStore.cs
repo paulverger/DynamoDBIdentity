@@ -40,7 +40,6 @@ namespace WebApp.Data
             ApplicationRole appRole = await (_roleStore.FindByIdAsync(employeeRoleId, cancellationToken));
             await AddToRoleAsync(user, appRole.NormalizedRoleName, cancellationToken);
 
-
             return IdentityResult.Success;
         }
 
@@ -52,7 +51,6 @@ namespace WebApp.Data
             Dictionary<string, AttributeValue> deleteDict = new Dictionary<string, AttributeValue>();
             deleteDict.Add("NormalizedUserName", new AttributeValue(user.NormalizedUserName.ToLower()));
             await _client.DeleteItemAsync(tableName, deleteDict, cancellationToken);
-
             return IdentityResult.Success;
         }
 
@@ -61,7 +59,6 @@ namespace WebApp.Data
             cancellationToken.ThrowIfCancellationRequested();
 
             ApplicationUser user = await _helper.GetApplicationUserItemByNonKeyAsync("Id", userId);
-
             return user;
 
 		}
@@ -158,9 +155,7 @@ namespace WebApp.Data
             cancellationToken.ThrowIfCancellationRequested();
 
             ApplicationUser user = await _helper.GetApplicationUserItemByNonKeyAsync("NormalizedEmail", normalizedEmail);
-
             return user;
-
         }
 
         public Task<string> GetNormalizedEmailAsync(ApplicationUser user, CancellationToken cancellationToken)
@@ -295,7 +290,6 @@ namespace WebApp.Data
             int roleId = role.RoleId;
             bool userHasRole = await _helper.UserHasRoleAsync(normalizedUserName, roleId);
             return userHasRole;
-
 
         }
 

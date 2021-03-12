@@ -13,8 +13,7 @@ namespace WebApp.Data
 
         private const int UserIdIncrement = 5;
         private const int RoleIdIncrement = 1;
-        private const int SubMinimumIdValue = 0;
-
+        
         public DataHelper(IAmazonDynamoDB client)
         {
             _client = client;
@@ -23,16 +22,11 @@ namespace WebApp.Data
         public async Task<int> GetNewUserIdAsync()
         {
             var tableName = "ApplicationUser";
-            AttributeValue attributeValue = new AttributeValue { N = SubMinimumIdValue.ToString() };
-            Dictionary<string, Condition> conditionDict = new Dictionary<string, Condition>();
-            conditionDict.Add("Id", new Condition
-            {
-                ComparisonOperator = "GT",
-                AttributeValueList = new List<AttributeValue> { attributeValue }
-            });
 
-            var result = await _client.ScanAsync(tableName, conditionDict);
+            List<string> attributes = new List<string>();
+            attributes.Add("Id");
 
+            var result = await _client.ScanAsync(tableName, attributes);
 
             List<Dictionary<string, AttributeValue>> items = result.Items;
             int maxId = 0;
@@ -52,15 +46,10 @@ namespace WebApp.Data
         public async Task<int> GetNewRoleIdAsync()
         {
             var tableName = "ApplicationRole";
-            AttributeValue attributeValue = new AttributeValue { N = SubMinimumIdValue.ToString() };
-            Dictionary<string, Condition> conditionDict = new Dictionary<string, Condition>();
-            conditionDict.Add("RoleId", new Condition
-            {
-                ComparisonOperator = "GT",
-                AttributeValueList = new List<AttributeValue> { attributeValue }
-            });
+            List<string> attributes = new List<string>();
+            attributes.Add("RoleId");
 
-            var result = await _client.ScanAsync(tableName, conditionDict);
+            var result = await _client.ScanAsync(tableName, attributes);
 
 
             List<Dictionary<string, AttributeValue>> items = result.Items;
@@ -277,7 +266,7 @@ namespace WebApp.Data
 			}
         }
 
-        public  async Task<ApplicationUser> GetApplicationUserItemByNonKeyAsync(string propertyName, object value)
+        public async Task<ApplicationUser> GetApplicationUserItemByNonKeyAsync(string propertyName, object value)
         {
             var tableName = "ApplicationUser";
             AttributeValue attributeValue = null;

@@ -25,8 +25,7 @@ namespace WebApp.Data
         public async Task<IdentityResult> CreateAsync(ApplicationRole role, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-
-            int maxRoleId = await _helper.GetNewRoleIdAsync();
+            role.RoleId = await _helper.GetNewRoleIdAsync();
             DynamoDBContext context = new DynamoDBContext(_client);
             var roleDoc = context.ToDocument<ApplicationRole>(role);
             Table table = Table.LoadTable(_client, "ApplicationRole");
@@ -101,7 +100,6 @@ namespace WebApp.Data
             cancellationToken.ThrowIfCancellationRequested();
 
             ApplicationRole role = await _helper.GetApplicationRoleItemByKeyAsync(roleId);
-
             return role;
         }
 
@@ -110,7 +108,6 @@ namespace WebApp.Data
             cancellationToken.ThrowIfCancellationRequested();
 
             ApplicationRole role = await FindByNameAsync(normalizedRoleName, cancellationToken);
-
             return role;
         }
 
@@ -119,7 +116,6 @@ namespace WebApp.Data
             cancellationToken.ThrowIfCancellationRequested();
 
             ApplicationRole role = await _helper.GetApplicationRoleItemByNonKeyAsync("NormalizedRoleName", normalizedRoleName);
-
             return role;
         }
 
