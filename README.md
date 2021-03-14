@@ -8,7 +8,7 @@ at a significant cost saving.
 
 ## More Information
 
-Take a look at this [blog post](https://dynamodbdotnet.blogspot.com/2021/03/how-to-implement-aspnet-core-identity)
+Take a look at this [blog post](https://dynamodbdotnet.wordpress.com/2021/03/14/how-to-implement-asp-net-core-identity-using-dynamodb/)
 for more detailed infomation on using ASP.NET Core Identity with DynamoDB.
 
 ## License
