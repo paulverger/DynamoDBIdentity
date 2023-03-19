@@ -3,7 +3,7 @@
 
 namespace WebApp.Models
 {
-	[DynamoDBTable("AppplicationRole")]
+	[DynamoDBTable("ApplicationRole")]
     public class ApplicationRole
     {
         [DynamoDBHashKey]
